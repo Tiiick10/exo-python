@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Exercices Python J1</title>
+</head>
+<body>
+    <h1>Exécuter un exercice Python (Jour 1)</h1>
+
+    <!-- Exercice 1 -->
+    <form method="POST">
+        <h3>Exercice 1 - Calcul de l'âge</h3>
+        <input type="hidden" name="exercice" value="1">
+        <label>Année de naissance :</label>
+        <input type="text" name="annee" required>
+        <button type="submit">Calculer</button>
+    </form>
+
+    <!-- Exercice 2 -->
+    <form method="POST">
+        <h3>Exercice 2 - Celsius → Fahrenheit</h3>
+        <input type="hidden" name="exercice" value="2">
+        <label>Température en °C :</label>
+        <input type="text" name="celsius" required>
+        <button type="submit">Convertir</button>
+    </form>
+
+    <!-- Exercice 3 -->
+    <form method="POST">
+        <h3>Exercice 3 - Surface d’un cercle</h3>
+        <input type="hidden" name="exercice" value="3">
+        <label>Rayon :</label>
+        <input type="text" name="rayon" required>
+        <button type="submit">Calculer</button>
+    </form>
+
+    <!-- Exercice 4 -->
+    <form method="POST">
+        <h3>Exercice 4 - Calcul de l’IMC</h3>
+        <input type="hidden" name="exercice" value="4">
+        <label>Poids (kg) :</label>
+        <input type="text" name="poids" required>
+        <label>Taille (m) :</label>
+        <input type="text" name="taille" required>
+        <button type="submit">Calculer</button>
+    </form>
+
+    {% if result %}
+        <hr>
+        <h2>Résultat :</h2>
+        <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
