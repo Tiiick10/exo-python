@@ -4,11 +4,28 @@ from PyPDF2 import PdfReader, PdfWriter
 import img2pdf
 import re
 
-OUTPUT_PATH = os.path.expanduser('~/Desktop/exo-python/Semaine2/Jour2/output/')
-OUTPUT_DL_PATH = os.path.expanduser('~/Desktop/exo-python/Semaine2/Jour2/output/download/')
+OUTPUT_PATH = os.path.expanduser('C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/')#~/Desktop/exo-python/Semaine2/Jour2/output/
+OUTPUT_DL_PATH = os.path.expanduser('C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/download/')#~/Desktop/exo-python/Semaine2/Jour2/output/download/
 os.makedirs(OUTPUT_DL_PATH, exist_ok=True)
 WEBSITE_PATH = "https://www.creativeuncut.com/"
 IMAGE_HOST_PREFIX = "https://sjc1.vultrobjects.com/cucdn/"
+
+def showHelp():
+    print("""
+Commandes disponibles :
+───────────────────────
+test_title         → Affiche le titre d'une galerie test
+test_url           → Affiche l'URL de la première image d'une galerie
+test_img           → Affiche l'URL de l'image d'une page donnée
+test_next          → Affiche l'URL de l'image suivante
+test_download      → Télécharge une image depuis une URL directe
+test_download_all  → Télécharge toutes les images d'une galerie
+random_gallery     → Propose une galerie aléatoire et permet de la télécharger
+list_galleries     → Affiche la liste de toutes les galeries disponibles
+search_gallery     → Recherche une galerie par mot-clé et permet d'en télécharger plusieurs
+help               → Affiche cette aide
+exit               → Quitte le programme
+""")
 
 def getGalleryTitle():
     url = "https://www.creativeuncut.com/art_mario-kart-world_a.html"
@@ -176,7 +193,41 @@ def getRandomGallery():
     else:
         print("Annulé.")
 
+def searchGallery():
+    search_term = input("Entrez un mot-clé pour rechercher une galerie (attention à la casse ex: pokémon et non pokemon) : ").lower()
+    galleries = getAllGameName()
+    filtered = [g for g in galleries if search_term in g["name"].lower()]
+
+    if not filtered:
+        print("Aucune galerie trouvée.")
+        return
+
+    for i, g in enumerate(filtered, 1):
+        print(f"{i}. {g['name']} -> {g['url']}")
+
+    choix = input("Quels galeries veux-tu DL? (ex: 1 2 3 ou all pour tout / vide pour annuler) : ").lower()
+    if not choix.strip():
+        print("Aucun téléchargement effectué.")
+        return
+
+    try:
+        if choix == "all":
+            selected = range(1, len(filtered)+1)
+        else:
+            selected = [int(x) for x in choix.strip().split()]
+
+        for i in selected:
+            if 1 <= i <= len(filtered):
+                print(f"Téléchargement de : {filtered[i-1]['name']}")
+                downloadAllImgByGalleryUrl(filtered[i-1]["url"])
+            else:
+                print(f"Numéro {i} invalide.")
+    except ValueError:
+        print("Entrée invalide.")
+
+
 print("----- PDF ART -----")
+showHelp()
 
 while True:
     cmd = input(">>>")
@@ -218,6 +269,12 @@ while True:
         else:
             for i, game in enumerate(galleries, 1):
                 print(f"{i}. {game['name']} -> {game['url']}")
+
+    if cmd == "search_gallery":
+        searchGallery()
+
+    if cmd == "help":
+        showHelp()
 
 
 
