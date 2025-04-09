@@ -2,3 +2,5 @@
 Semaine2/Jour1/filereader-projet/output/
 Semaine2/Jour1/filereader-projet/output_video/
 Semaine2/Jour1/Lecture de fichiers/output
+.pytest_cache
+Semaine2/Jour3/test/__pycache__

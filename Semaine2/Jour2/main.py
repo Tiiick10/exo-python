@@ -4,8 +4,8 @@ from PyPDF2 import PdfReader, PdfWriter
 import img2pdf
 import re
 
-OUTPUT_PATH = os.path.expanduser('C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/')#~/Desktop/exo-python/Semaine2/Jour2/output/
-OUTPUT_DL_PATH = os.path.expanduser('C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/download/')#~/Desktop/exo-python/Semaine2/Jour2/output/download/
+OUTPUT_PATH = os.path.expanduser('~/Desktop/exo-python/Semaine2/Jour2/output/')#C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/
+OUTPUT_DL_PATH = os.path.expanduser('~/Desktop/exo-python/Semaine2/Jour2/output/download/')#C:/Users/Win/OneDrive/Bureau/exo-python/Semaine2/Jour2/output/download/
 os.makedirs(OUTPUT_DL_PATH, exist_ok=True)
 WEBSITE_PATH = "https://www.creativeuncut.com/"
 IMAGE_HOST_PREFIX = "https://sjc1.vultrobjects.com/cucdn/"
@@ -14,15 +14,17 @@ def showHelp():
     print("""
 Commandes disponibles :
 ───────────────────────
-test_title         → Affiche le titre d'une galerie test
-test_url           → Affiche l'URL de la première image d'une galerie
-test_img           → Affiche l'URL de l'image d'une page donnée
-test_next          → Affiche l'URL de l'image suivante
-test_download      → Télécharge une image depuis une URL directe
-test_download_all  → Télécharge toutes les images d'une galerie
+get_title          → Affiche le titre d'une galerie test
+get_url            → Affiche l'URL de la première image d'une galerie
+get_img            → Affiche l'URL de l'image d'une page donnée
+get_next           → Affiche l'URL de l'image suivante
+download           → Télécharge une image depuis une URL directe
+download_all       → Télécharge toutes les images d'une galerie
 random_gallery     → Propose une galerie aléatoire et permet de la télécharger
 list_galleries     → Affiche la liste de toutes les galeries disponibles
 search_gallery     → Recherche une galerie par mot-clé et permet d'en télécharger plusieurs
+make_pdf           → Crée un PDF à partir des images d'une galerie déjà téléchargée
+clear_images       → Supprime les images d'une galerie téléchargée
 help               → Affiche cette aide
 exit               → Quitte le programme
 """)
@@ -150,24 +152,28 @@ def downloadAllImgByGalleryUrl(gallery_url):
             current_page = next_url
 
         print("Download done")
+        convert_img_to_pdf(title)
 
     except Exception as e:
         print(f"Error while downloading : {e}")
 
 def getAllGameName():
+
+    url = "https://www.creativeuncut.com/game-art-galleries.html"
+    result = []
+
     try:
-        url = "https://www.creativeuncut.com/game-art-galleries.html"
         response = requests.get(url)
         response.raise_for_status()
         soup = bs4.BeautifulSoup(response.text, 'html.parser')
-
-        result = []
         divs = soup.find_all("div", class_="ag")
 
         for div in divs:
             a_tag = div.find("a")
             if a_tag and "href" in a_tag.attrs:
                 name = a_tag.text.strip()
+                if name.endswith("The"):
+                    name = "The " + name[:-4].strip()
                 href = WEBSITE_PATH + a_tag["href"].lstrip("/")
                 result.append({"name": name, "url": href})
 
@@ -225,6 +231,54 @@ def searchGallery():
     except ValueError:
         print("Entrée invalide.")
 
+def convert_img_to_pdf(gallery_title: str):
+
+    safe_title = re.sub(r'\W+', '_', gallery_title)
+    gallery_folder = os.path.join(OUTPUT_DL_PATH, safe_title)
+
+    if not os.path.exists(gallery_folder):
+        print(f"Le dossier '{gallery_folder}' n'existe pas.")
+        return
+
+    images = [f for f in os.listdir(gallery_folder) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    images.sort()
+
+    if not images:
+        print("Aucune image trouvée pour créer un PDF.")
+        return
+
+    image_paths = [os.path.join(gallery_folder, img) for img in images]
+    output_pdf_path = os.path.join(gallery_folder, f"{safe_title}.pdf")
+
+    try:
+        with open(output_pdf_path, "wb") as f:
+            f.write(img2pdf.convert(image_paths))
+        print(f"PDF créé : {output_pdf_path}")
+    except Exception as e:
+        print(f"Erreur lors de la création du PDF : {e}")
+
+def clear_images_in_folder():
+    title = input("Titre de la galerie à nettoyer (ex: Mario Kart World) : ")
+    safe_title = re.sub(r'\W+', '_', title)
+    gallery_folder = os.path.join(OUTPUT_DL_PATH, safe_title)
+
+    if not os.path.exists(gallery_folder):
+        print(f"Le dossier '{gallery_folder}' n'existe pas.")
+        return
+
+    images_deleted = 0
+    for file in os.listdir(gallery_folder):
+        if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+            try:
+                os.remove(os.path.join(gallery_folder, file))
+                images_deleted += 1
+            except Exception as e:
+                print(f"Erreur en supprimant {file} : {e}")
+
+    if images_deleted == 0:
+        print("Aucune image à supprimer.")
+    else:
+        print(f"{images_deleted} image(s) supprimée(s) de '{safe_title}'")
 
 print("----- PDF ART -----")
 showHelp()
@@ -236,26 +290,26 @@ while True:
         print("Bye")
         break
 
-    if cmd == "test_title":
+    if cmd == "get_title":
         getGalleryTitle()
 
-    if cmd == "test_url":
+    if cmd == "get_url":
         url = input("Entrez l'URL de la galerie : ")
         getFirstUrl(url)
 
-    if cmd == "test_img":
+    if cmd == "get_img":
         url = input("Entrez l'URL de la galerie : ") #https://www.creativeuncut.com/gallery-48/mkw-logo.html
         print(getImgUrl(url))
     
-    if cmd == "test_next":
+    if cmd == "get_next":
         url = input("Entrez l'URL de la galerie : ") #https://www.creativeuncut.com/gallery-48/mkw-logo.html
         print(getNextUrl(url))
 
-    if cmd == "test_download":
+    if cmd == "download":
         url = input("Entrez l'URL de la galerie : ") #https://sjc1.vultrobjects.com/cucdn/gallery-48/art/mkw-logo.jpg
         print(downloadImg(url))
 
-    if cmd == "test_download_all":
+    if cmd == "download_all":
         url = input("Entrez l'URL de la galerie : ") #https://www.creativeuncut.com/art_mario-kart-world_a.html
         downloadAllImgByGalleryUrl(url)
     
@@ -272,6 +326,13 @@ while True:
 
     if cmd == "search_gallery":
         searchGallery()
+    
+    if cmd == "make_pdf":
+        title = input("Entrez le titre de la galerie téléchargée : ")
+        convert_img_to_pdf(title)
+
+    if cmd == "clear_images":
+        clear_images_in_folder()
 
     if cmd == "help":
         showHelp()
